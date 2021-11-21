@@ -1,6 +1,10 @@
 # Large files
 *.osm
 
+# IDE
+.bsp/
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
