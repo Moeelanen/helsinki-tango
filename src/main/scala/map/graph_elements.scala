@@ -1,58 +1,72 @@
 package map
 
-import scala.io.Source
+import scala.util._
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import org.scalajs.dom
+import org.scalajs.dom.ext.Ajax
+import scala.async.Async.{async, await}
 
 // Defining data types for edges and nodes.
-final case class Edge(source_node: Int, target_node: Int, length: Double, bidirectional: Boolean, name: String)
+final case class Edge(source: Int, target: Int, oneway: Boolean, name: String, cardinal: String, distance: Double)
 final case class Node(id: Int, x: Double, y: Double)
 
-// Defining the adjacent graph
-final case class EdgeWeightedGraph(adj: Map[Int, Vector[Edge]] = Map.empty)
 
 object World {
 
   // List of all private attributes
   private var nodes: Vector[Node] = Vector[Node]()
   private var edges: Vector[Edge] = Vector[Edge]()
-  var map: EdgeWeightedGraph = EdgeWeightedGraph()
+  var map = Map[Int, Vector[Edge]]()
 
   // Populating the world with nodes and edges during initialisation
-  // Probably there exists a better way of doing this, but due to time I'll leave it like this for now
-  // TODO: Wrap the code in a function and execute that to make things cleaner
+  // It took eight hours to figure out the following asynchronous code :) 
 
-  // Opening the map data files
-  private val bufferedNodes = Source.fromFile("src/main/scala/map/map_data/processed/map.node")
-  private val bufferedEdges = Source.fromFile("src/main/scala/map/map_data/processed/map.edge")
+  private def initialize: Future[Unit] = async {
+    println("Started initialization")
+    
+    def populatingEdges(value: String): Unit = {
+      println("Started populating edges!")
+      val edges = value.split("\n")
 
+      for (line <- edges) {
+        val cols = line.split(",").map(_.trim)
+        val temp_edge = new Edge(cols(0).toInt, cols(1).toInt, cols(2).toBoolean, cols(3), cols(4), cols(5).toDouble)
+        this.edges = this.edges :+ temp_edge
+      }
+      println("Edges completed!")
+    }
 
-  // Iterating through the files (again, probably not the best way!)
-  for (line <- bufferedEdges.getLines()) {
-    val cols = line.split(",").map(_.trim)
-    val temp_edge = new Edge(cols(0).toInt, cols(1).toInt, cols(2).toDouble, cols(3).toBoolean, cols(4))
-    this.edges = this.edges :+ temp_edge
+    def populatingNodes(value: String): Unit = {
+      println("Started populating nodes!")
+      val nodes = value.split("\n")
+
+      for (line <- nodes) {
+        val cols = line.split(",").map(_.trim)
+        val temp_node = new Node(cols(0).toInt, cols(1).toDouble, cols(2).toDouble)
+        this.nodes = this.nodes :+ temp_node
+      }
+      println("Nodes completed!")
+    }
+
+    val buffering: Future[Unit] = async {
+      val bufferedNodes = Ajax.get("http://moelanen.xyz/helsinki-tango/map_data/map.node")
+        .map(xhr => populatingNodes(xhr.responseText))
+
+      val bufferedEdges = Ajax.get("http://moelanen.xyz/helsinki-tango/map_data/map.edge")
+        .map(xhr => populatingEdges(xhr.responseText))
+
+      await(bufferedNodes)
+      await(bufferedEdges)
+    }
+
+    await(buffering)
+    println("Initialization completed!")
+
   }
 
-  // Same process but for the nodes
-  for (line <- bufferedNodes.getLines()) {
-    val cols = line.split(",").map(_.trim)
-    val temp_node = new Node(cols(0).toInt, cols(1).toDouble, cols(2).toDouble)
-    this.nodes = this.nodes :+ temp_node
+  def run: Future[Unit] = async{
+    await(this.initialize)
+    println("Run initialization completed")
   }
-
-  // Closing the open files to save resources
-  this.bufferedNodes.close()
-  this.bufferedEdges.close()
-
-  // Populating the adjacency list
-  this.map = EdgeWeightedGraph(this.edges.groupBy(_.source_node))
-  println(this.map.adj.size)
-
-  def firstEdge: Edge = {
-    edges.head
-  }
-
-  def firstNode: Node = {
-    nodes.head
-  }
-
 }
