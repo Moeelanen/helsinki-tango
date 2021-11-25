@@ -61,6 +61,8 @@ object World {
     }
 
     await(buffering)
+    this.map = this.edges.groupBy(_.source)
+    println(this.map.head)
     println("Initialization completed!")
 
   }
@@ -68,5 +70,6 @@ object World {
   def run: Future[Unit] = async{
     await(this.initialize)
     println("Run initialization completed")
+
   }
 }
