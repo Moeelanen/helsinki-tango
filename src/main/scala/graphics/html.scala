@@ -1,11 +1,15 @@
 package graphics
 
+import game._
+import map.{Edge, Node}
+
 import org.scalajs.dom
 
 import scala.scalajs.js
 import org.scalajs.dom.html.{Canvas, Pre}
 
 case class Pos(var x: Int, var y: Int)
+case class UIElement(pos: Pos, width: Int, height: Int, func: () => Unit)
 
 object Window {
   val c = dom.document.getElementById("canvas").asInstanceOf[Canvas]
@@ -17,31 +21,95 @@ object Window {
   var canvasPos = new Pos(0,0)
   var mousePos = new Pos(0, 0)
 
-  private def mouseIsOver(): Unit = {}
+  var elements = Vector[UIElement]()
+
+  // COLORS
+  val highlightedUIElement = "#"
+
+  private def mouseIsOver(clicked: Boolean = false): Unit = {
+    for (element <- elements) {
+      if (this.mousePos.x > element.pos.x - element.width/2 && this.mousePos.x < element.pos.x + element.width/2) {
+        if (this.mousePos.y > element.pos.y - element.height/2 && this.mousePos.y < element.pos.y + element.height/2) {
+          println("hovering over an element")
+          if (clicked)
+            element.func()
+        }
+      }
+    }
+  }
+
+  private def alert() = {
+    dom.window.alert("Clicked the box!")
+  }
 
   private def assignMouse(e: dom.MouseEvent): Unit = {
     var cRect = this.c.getBoundingClientRect()
     this.mousePos.x = e.pageX.toInt - cRect.left.toInt
     this.mousePos.y = e.pageY.toInt - cRect.top.toInt
-    println(this.mousePos.y)
-    this.draw
+    this.mouseIsOver()
   }
 
   private def mouseClickCheck(e: dom.MouseEvent): Unit = {
-    if (this.mousePos.x > this.w/2-25 && this.mousePos.x < this.w/2+25) {
-      if (this.mousePos.y > this.h/2-10 && this.mousePos.y < this.h/2+10) {
-        dom.window.alert("Clicked the box!")
-      }
-    }
+    this.mouseIsOver(true)
   }
 
-  private def draw: Unit = {
-    this.ctx.fillStyle = "#000"
-    this.ctx.fillRect(0,0,this.w, this.h)
-    this.ctx.fillStyle = "#FFF"
-    this.ctx.fillRect(this.w / 2 - 25, this.h / 2 - 10, 50, 20)
+  def draw(screen: Int, nodes: Vector[Node] = Vector[Node]()) {
+    elements = Vector[UIElement]()
 
-    this.ctx.fillRect(this.mousePos.x - 5, this.mousePos.y - 5, 10, 10)
+    def resetCanvas: Unit = {
+      this.ctx.fillStyle = "#000"
+      this.ctx.fillRect(0, 0, Window.w, Window.h)
+    }
+
+    def drawElements: Unit = {
+      resetCanvas
+      this.ctx.fillStyle = "#FFF"
+      for (element <- elements) {
+        this.ctx.fillRect(element.pos.x - element.width/2, element.pos.y - element.height/2, element.width, element.height)
+      }
+    }
+
+    def mainMenu: Unit = {
+      val storyStartElement = new UIElement(new Pos(Window.w/2, Window.h/3), 100, 20, alert)
+      elements = elements :+ storyStartElement
+
+      drawElements
+    }
+
+    def map: Unit = {
+      resetCanvas
+
+      val minLat = nodes.map(_.lat).min
+      val maxLat = nodes.map(_.lat).max
+      val latDifference = maxLat - minLat
+      val minLon = nodes.map(_.lon).min
+      val maxLon = nodes.map(_.lon).max
+      val lonDifference = maxLon - minLon
+
+
+      def normalizer(node: Node): Pos = {
+        // Lat increases to North, Lon increases to East
+        // mouseY increases South, mouseX increases East
+        val lat = (this.h - (node.lat - minLat) / latDifference * this.h)
+        val lon = ((node.lon - minLon) / lonDifference * this.w)
+        new Pos(lon.toInt, lat.toInt)
+      }
+
+      val normalizedNodes = nodes.map(normalizer)
+
+      this.ctx.fillStyle = "#000"
+      for (node <- normalizedNodes) {
+        elements = elements :+ new UIElement(node, 2, 2, alert)
+      }
+
+      drawElements
+    }
+
+
+
+    if (screen == 1) mainMenu
+    else if (screen == 2) map
+
   }
 
   c.onmousemove = { (e: dom.MouseEvent ) => (assignMouse(e))}

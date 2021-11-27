@@ -9,7 +9,7 @@ import scala.async.Async.{async, await}
 
 // Defining data types for edges and nodes.
 final case class Edge(source: Int, target: Int, oneway: Boolean, name: String, cardinal: String, distance: Double)
-final case class Node(id: Int, x: Double, y: Double)
+final case class Node(id: Int, lat: Double, lon: Double)
 
 
 object World {
@@ -22,7 +22,7 @@ object World {
   // Populating the world with nodes and edges during initialisation
   // It took eight hours to figure out the following asynchronous code :) 
 
-  private def initialize: Future[Unit] = async {
+  def initialize: Future[Unit] = async {
     println("Started initialization")
     
     def populatingEdges(value: String): Unit = {
@@ -64,12 +64,14 @@ object World {
     this.map = this.edges.groupBy(_.source)
     println(this.map.head)
     println("Initialization completed!")
-
   }
 
-  def run: Future[Unit] = async{
-    await(this.initialize)
-    println("Run initialization completed")
-
+  def getNode(id: Int): Node = {
+    this.nodes(id)
   }
+
+  def fetchSurroundings(node: Node): Vector[Node] = {
+    this.nodes.filter(n => ((n.lon - node.lon).abs < 0.005) && ((n.lat- node.lat).abs < 0.0025))
+  }
+
 }
