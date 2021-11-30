@@ -1,7 +1,7 @@
 package game
 
 import graphics._
-import map._
+import map.{World, Node, Edge}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLAudioElement
 
@@ -37,11 +37,16 @@ object Game {
   }
 
   def run(): Unit = {
-    println("Troubleshooting")
     async {
       await(World.initialize)
-      currentNode = World.getNode(38670)
-      Window.draw(currentScreen, World.fetchSurroundings(this.currentNode))
+      currentNode = World.getNode(32152)
+      println("Fetching surrounding nodes")
+      var surroundingNodes = World.fetchSurroundingNodes(this.currentNode)
+      println("Done")
+      println("Fetching surrounding edges")
+      var surroundingEdges = World.fetchSurrondingEdges(surroundingNodes)
+      println("Done")
+      Window.draw(currentScreen, surroundingNodes, surroundingEdges)
       js.timers.setInterval(frameTime) {
       }
     }

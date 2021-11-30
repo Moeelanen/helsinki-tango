@@ -11,8 +11,8 @@ import scala.async.Async.{async, await}
 final case class Edge(source: Int, target: Int, oneway: Boolean, name: String, cardinal: String, distance: Double)
 final case class Node(id: Int, lat: Double, lon: Double)
 
-
 object World {
+
 
   // List of all private attributes
   private var nodes: Vector[Node] = Vector[Node]()
@@ -30,9 +30,13 @@ object World {
       val edges = value.split("\n")
 
       for (line <- edges) {
-        val cols = line.split(",").map(_.trim)
-        val temp_edge = new Edge(cols(0).toInt, cols(1).toInt, cols(2).toBoolean, cols(3), cols(4), cols(5).toDouble)
-        this.edges = this.edges :+ temp_edge
+        try {
+          val cols = line.split(",").map(_.trim)
+          val temp_edge = new Edge(cols(0).toInt, cols(1).toInt, cols(2).toBoolean, cols(3), cols(4), cols(5).toDouble)
+          this.edges = this.edges :+ temp_edge
+        } catch {
+          case e: Throwable => println(e)
+        }
       }
       println("Edges completed!")
     }
@@ -62,7 +66,7 @@ object World {
 
     await(buffering)
     this.map = this.edges.groupBy(_.source)
-    println(this.map.head)
+    println(this.map.maxBy(n => n._2.size))
     println("Initialization completed!")
   }
 
@@ -70,8 +74,18 @@ object World {
     this.nodes(id)
   }
 
-  def fetchSurroundings(node: Node): Vector[Node] = {
-    this.nodes.filter(n => ((n.lon - node.lon).abs < 0.005) && ((n.lat- node.lat).abs < 0.0025))
+  def fetchSurroundingNodes(node: Node): Vector[Node] = {
+    this.nodes.filter(n => ((n.lon - node.lon).abs < 0.01) && ((n.lat- node.lat).abs < 0.005))
+  }
+
+  def fetchSurrondingEdges(nodes: Vector[Node]): Vector[Edge] = {
+    var surroundingEdges = Vector[Edge]()
+    for (node <- nodes) {
+      var edges = this.map.get(node.id)
+      if (edges.isDefined)
+        surroundingEdges = surroundingEdges ++ edges.get
+    }
+    surroundingEdges
   }
 
 }
