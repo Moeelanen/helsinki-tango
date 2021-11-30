@@ -23,10 +23,13 @@ object Game {
   //------------------------------------------------------------
 
   //------------------- GAME STATE VALUES ----------------------
+  
   var currentNode: Node = new Node(0, 0, 0)
   var traveledEdges: Vector[Edge] = Vector[Edge]()
 
   val currentScreen: Int = 2
+  //
+  //------------------------------------------------------------
 
   def playAudio(): Unit = {
     audio.volume = this.volume

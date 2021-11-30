@@ -4,12 +4,13 @@ import game._
 import map.{Edge, Node}
 
 import org.scalajs.dom
-
 import scala.scalajs.js
 import org.scalajs.dom.html.{Canvas, Pre}
 
 case class Pos(var x: Int, var y: Int)
 case class UIElement(pos: Pos, width: Int, height: Int, func: () => Unit)
+
+// Window contains all code around ui drawing related functions
 
 object Window {
   val c = dom.document.getElementById("canvas").asInstanceOf[Canvas]
@@ -26,6 +27,7 @@ object Window {
   // COLORS
   val highlightedUIElement = "#"
 
+  // Checks if mouse is currently over a drawn UI element
   private def mouseIsOver(clicked: Boolean = false): Unit = {
     for (element <- elements) {
       if (this.mousePos.x > element.pos.x - element.width/2 && this.mousePos.x < element.pos.x + element.width/2) {
@@ -38,10 +40,13 @@ object Window {
     }
   }
 
+  // Throwaway function
   private def alert() = {
     dom.window.alert("Clicked the box!")
   }
 
+  // Assigns values from MouseEvent element to object attributes
+  // aka updates mouse coordinates
   private def assignMouse(e: dom.MouseEvent): Unit = {
     var cRect = this.c.getBoundingClientRect()
     this.mousePos.x = e.pageX.toInt - cRect.left.toInt
@@ -49,10 +54,12 @@ object Window {
     this.mouseIsOver()
   }
 
+  // Executes the function listed in UIElement, of the element over which the mouse currently is on
   private def mouseClickCheck(e: dom.MouseEvent): Unit = {
     this.mouseIsOver(true)
   }
 
+  // Includes all the drawing related functions
   def draw(screen: Int, nodes: Vector[Node] = Vector[Node]()) {
     elements = Vector[UIElement]()
 
