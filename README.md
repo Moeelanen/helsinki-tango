@@ -16,7 +16,8 @@ The code is compiled into Javascript, and **does not** run in JVM
 To build, 
 ```
 git clone
-sbt helsinki-tango/fullLinkJS
+cd helsinki-tango/
+sbt fullLinkJS
 ```
 
 Open the index.html file in your browser. Since the map data is accessed through a web request from my server, you'll have to have a way of passing a CORS check.
