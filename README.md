@@ -1,4 +1,4 @@
-# Helsinki Tango
+![Helsinki Tango](https://raw.githubusercontent.com/Moeelanen/helsinki-tango/main/media/logo.png)
 End project for Aalto O1 first year course. You play as a taxi driver in a time when there wasn't any navigators to help you along. Find your way to the finish with just the help of streetsigns and cardinal directions. 
 
 # Installation
