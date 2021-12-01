@@ -1,10 +1,11 @@
-package map
+package world
 
 import scala.util._
 import scala.concurrent._
 import ExecutionContext.Implicits.global
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
+
 import scala.async.Async.{async, await}
 
 // Defining data types for edges and nodes.
@@ -12,7 +13,6 @@ final case class Edge(source: Int, target: Int, oneway: Boolean, name: String, c
 final case class Node(id: Int, lat: Double, lon: Double)
 
 object World {
-
 
   // List of all private attributes
   private var nodes: Vector[Node] = Vector[Node]()
@@ -86,6 +86,14 @@ object World {
         surroundingEdges = surroundingEdges ++ edges.get
     }
     surroundingEdges
+  }
+
+  def fetchPossibleEdgesAtNode(id: Node): Vector[Edge] = {
+    val possible_edges = this.map.get(id.id)
+    if (possible_edges.isDefined) {
+      possible_edges.get
+    } else { Vector[Edge]() }
+
   }
 
 }

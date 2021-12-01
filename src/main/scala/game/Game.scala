@@ -1,7 +1,7 @@
 package game
 
 import graphics._
-import map.{World, Node, Edge}
+import world._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLAudioElement
 
@@ -14,7 +14,7 @@ object Game {
   //------------------------- SETTINGS -------------------------
 
   // Graphical settings
-  val frameTime = 1000/60
+  val frameTime = 1000/20
 
   // Audio settings
   val audio = dom.document.getElementById("soundtrack").asInstanceOf[HTMLAudioElement]
@@ -27,27 +27,55 @@ object Game {
   var currentNode: Node = new Node(0, 0, 0)
   var traveledEdges: Vector[Edge] = Vector[Edge]()
 
-  val currentScreen: Int = 2
-  //
+  // CurrentScreen value clarifications
+  // 1: Main Screen
+  // 2: Loading Screen
+  // 3: Freeroam
+  var currentScreen: Int = 1
+  var dotCount = 1
+
+  var possibleEdges: Vector[Edge] = Vector[Edge]()
+
   //------------------------------------------------------------
 
-  def playAudio(): Unit = {
+  private def playAudio(): Unit = {
     audio.volume = this.volume
     audio.play()
   }
 
+  def startFree(): Unit = async{
+    playAudio()
+    this.currentScreen = 2
+    await(World.initialize)
+    js.timers.setTimeout(1000) {
+      this.moveToNode(4428)
+      this.currentScreen = 3
+    }
+  }
+
+  def moveToNode(id: Int): Unit = {
+    currentNode = World.getNode(id)
+    possibleEdges = World.fetchPossibleEdgesAtNode(currentNode)
+    if (possibleEdges.size == 1) {
+      js.timers.setTimeout(500) {
+        moveToNode(possibleEdges.head.target)
+      }
+    }
+  }
+
   def run(): Unit = {
     async {
-      await(World.initialize)
-      currentNode = World.getNode(32152)
-      println("Fetching surrounding nodes")
-      var surroundingNodes = World.fetchSurroundingNodes(this.currentNode)
-      println("Done")
-      println("Fetching surrounding edges")
-      var surroundingEdges = World.fetchSurrondingEdges(surroundingNodes)
-      println("Done")
-      Window.draw(currentScreen, surroundingNodes, surroundingEdges)
       js.timers.setInterval(frameTime) {
+        if (currentScreen == 1) {
+          Window.draw(currentScreen)
+        } else if(currentScreen == 2) {
+          // TODO: Add loading animation
+          Window.draw(currentScreen, loading_dots=3)
+        } else if(currentScreen == 3) {
+          var surroundingNodes = World.fetchSurroundingNodes(this.currentNode)
+          var surroundingEdges = World.fetchSurrondingEdges(surroundingNodes)
+          Window.draw(currentScreen, surroundingNodes, surroundingEdges)
+        }
       }
     }
   }
