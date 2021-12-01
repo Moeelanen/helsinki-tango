@@ -1,26 +1,28 @@
 <!DOCTYPE html>
 <style>
 @font-face {
-    font-family: "8bitTango";
-    src: url(8-bit.ttf);
+    font-family: "kasibit";
+    src: url(kasibit.woff) format('font-woff');
 }
 h1 {
-  font-family: "8bitTango"
+  font-family: "kasibit"
 }
 body {
   background-image:
     linear-gradient(to bottom, rgba(254,250,215,0.4), rgba(25,21,12, 0.7)),
-    url('media/helsinki.png');
+    url('helsinki.png');
   background-size: cover;
   background-attachment: fixed;
 }
 
 </style>
 
+</style>
+
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>helsinki-tango</title>
+    <title>Helsinki Tango</title>
   </head>
   <body>
     <h1 style="-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"
@@ -28,7 +30,7 @@ body {
  onselectstart="return false;"
  onmousedown="return false;">Helsinki Tango</h1>
     <audio loop id="soundtrack">
-      <source src="src/main/scala/sound/trestristes.mp3" type="audio/mpeg">
+      <source src="trestristes.mp3" type="audio/mpeg">
     </audio>
 
 
@@ -36,6 +38,7 @@ body {
     <div style="text-align:center;">
     	<canvas id="canvas" width="800" height="600"></canvas>
     </div>
-    <script type="text/javascript" src="./target/scala-2.13/helsinki-tango-fastopt/main.js"></script>
+    <script type="text/javascript" src="main.js"></script>
   </body>
 </html>
+

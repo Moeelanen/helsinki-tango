@@ -12,6 +12,7 @@ import scala.async.Async.{async, await}
 final case class Edge(source: Int, target: Int, oneway: Boolean, name: String, cardinal: String, distance: Double)
 final case class Node(id: Int, lat: Double, lon: Double)
 
+
 object World {
 
   // List of all private attributes
@@ -23,10 +24,8 @@ object World {
   // It took eight hours to figure out the following asynchronous code :) 
 
   def initialize: Future[Unit] = async {
-    println("Started initialization")
-    
+
     def populatingEdges(value: String): Unit = {
-      println("Started populating edges!")
       val edges = value.split("\n")
 
       for (line <- edges) {
@@ -38,11 +37,9 @@ object World {
           case e: Throwable => println(e)
         }
       }
-      println("Edges completed!")
     }
 
     def populatingNodes(value: String): Unit = {
-      println("Started populating nodes!")
       val nodes = value.split("\n")
 
       for (line <- nodes) {
@@ -50,14 +47,13 @@ object World {
         val temp_node = new Node(cols(0).toInt, cols(1).toDouble, cols(2).toDouble)
         this.nodes = this.nodes :+ temp_node
       }
-      println("Nodes completed!")
     }
 
     val buffering: Future[Unit] = async {
-      val bufferedNodes = Ajax.get("http://moelanen.xyz/helsinki-tango/map_data/map.node")
+      val bufferedNodes = Ajax.get("https://moelanen.xyz/helsinki-tango/map_data/map.node")
         .map(xhr => populatingNodes(xhr.responseText))
 
-      val bufferedEdges = Ajax.get("http://moelanen.xyz/helsinki-tango/map_data/map.edge")
+      val bufferedEdges = Ajax.get("https://moelanen.xyz/helsinki-tango/map_data/map.edge")
         .map(xhr => populatingEdges(xhr.responseText))
 
       await(bufferedNodes)
@@ -66,8 +62,6 @@ object World {
 
     await(buffering)
     this.map = this.edges.groupBy(_.source)
-    println(this.map.maxBy(n => n._2.size))
-    println("Initialization completed!")
   }
 
   def getNode(id: Int): Node = {
@@ -94,6 +88,32 @@ object World {
       possible_edges.get
     } else { Vector[Edge]() }
 
+  }
+
+  // Some roads do not have names, so categories have to be used. Unfortunately makes for a bad game, so this is to
+  // check where the unnamed roads lead.
+  def lookToFuture(street: Edge): Edge = {
+    var returnVal: Edge = new Edge(street.source, street.target, street.oneway, street.name, street.cardinal, street.distance)
+    val illegalStreetNames: Vector[String] = Vector("trunk_link", "highway_link", "motorway_link", "unclassified", "secondary", "primary_link")
+    if (illegalStreetNames.contains(street.name)) {
+      val nextStreets = fetchPossibleEdgesAtNode(this.getNode(street.target))
+      val listOfNames = nextStreets.filterNot(n=> illegalStreetNames.contains(n.name))
+
+      if (listOfNames.nonEmpty)
+        returnVal = new Edge(street.source, street.target, street.oneway, "("+listOfNames(0).name+")", listOfNames(0).cardinal, street.distance)
+      else
+        returnVal = lookToFuture(fetchPossibleEdgesAtNode(this.getNode(street.target)).head)
+    }
+    returnVal
+  }
+
+  def fetchPossibleEdgesReadable(id: Node): Vector[Edge] = {
+    val non_readable: Vector[Edge] = this.fetchPossibleEdgesAtNode(id)
+    var readable = Vector[Edge]()
+    for (edge <- non_readable) {
+      readable = readable :+ this.lookToFuture(edge)
+    }
+    readable
   }
 
 }
