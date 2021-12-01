@@ -25,7 +25,7 @@ Open the index.html file in your browser. Since the map data is accessed through
 If you want to host the files yourself, the files are provided and the addresses can be changed.
 
 # Walkthrough
-Gameplay is simple, the challenge comes from not looking at Google Maps. To play, click the street names, when two or more options are shown, otherwise just enjoy the ride.
+Gameplay is simple, the challenge comes from not looking at Google Maps. To play, click the street names when two or more options are shown, otherwise just enjoy the ride.
 A name inside brackets ```()``` indicates a road that doesn't have a name, but leads to the one shown.
 
 To get a better feeling of how the traversal works in Helsinki Tango, the following walkthrough will get you exploring.
